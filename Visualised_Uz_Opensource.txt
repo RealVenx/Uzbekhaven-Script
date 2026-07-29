@@ -1,0 +1,261 @@
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+   Name = "Visualised Uz Opensource",
+   LoadingTitle = "Visualised Uz",
+   LoadingSubtitle = "by Venxggs",
+   ConfigurationSaving = { Enabled = false },
+   Discord = { Enabled = false },
+   KeySystem = false
+})
+
+local CombatTab = Window:CreateTab("Combat", 4483362458)
+local SettingsTab = Window:CreateTab("Settings", 4483362458)
+local InfoTab = Window:CreateTab("Info", 4483362458)
+
+local LocalPlayer = game.Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local HitboxEnabled = false
+local HitboxSize = 2
+local TargetPart = "HumanoidRootPart"
+local TargetTeam = "All"
+
+local CrosshairEnabled = false
+local CrosshairColorMode = "White"
+local CrosshairGui = nil
+local CrosshairDot = nil
+
+local EspEnabled = false
+local EspColorMode = "Team Color"
+local Highlights = {}
+
+local function CheckTeam(player)
+   if player == LocalPlayer then return false end
+   if TargetTeam == "Other teams" then
+      if LocalPlayer.Team and player.Team and LocalPlayer.Team == player.Team then
+         return false
+      end
+   end
+   return true
+end
+
+task.spawn(function()
+   while task.wait(0.1) do
+      for _, player in pairs(game.Players:GetPlayers()) do
+         if player ~= LocalPlayer and player.Character then
+            local char = player.Character
+            local target = char:FindFirstChild(TargetPart)
+            if target then
+               if HitboxEnabled and CheckTeam(player) then
+                  target.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
+                  target.Transparency = 0.5
+                  target.CanCollide = false
+               else
+                  if TargetPart == "Head" then
+                     target.Size = Vector3.new(1.2, 1.2, 1.2)
+                  else
+                     target.Size = Vector3.new(2, 2, 1)
+                  end
+                  target.Transparency = 0
+               end
+            end
+         end
+      end
+   end
+end)
+
+local function UpdateCrosshairColor()
+   if not CrosshairDot then return end
+   if CrosshairColorMode == "Qizil" then
+      CrosshairDot.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+   elseif CrosshairColorMode == "Oq" then
+      CrosshairDot.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+   elseif CrosshairColorMode == "Qora" then
+      CrosshairDot.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+   elseif CrosshairColorMode == "Sariq" then
+      CrosshairDot.BackgroundColor3 = Color3.fromRGB(255, 255, 0)
+   end
+end
+
+local function CreateCrosshair()
+   if CrosshairGui then CrosshairGui:Destroy() end
+   CrosshairGui = Instance.new("ScreenGui")
+   CrosshairGui.Name = "CustomCrosshair"
+   CrosshairGui.Parent = game.CoreGui
+
+   CrosshairDot = Instance.new("Frame")
+   CrosshairDot.Size = UDim2.new(0, 6, 0, 6)
+   CrosshairDot.Position = UDim2.new(0.5, -3, 0.5, -3)
+   CrosshairDot.AnchorPoint = Vector2.new(0.5, 0.5)
+   CrosshairDot.BorderSizePixel = 0
+   CrosshairDot.Parent = CrosshairGui
+
+   local corner = Instance.new("UICorner")
+   corner.CornerRadius = UDim.new(1, 0)
+   corner.Parent = CrosshairDot
+
+   UpdateCrosshairColor()
+end
+
+local function RemoveCrosshair()
+   if CrosshairGui then
+      CrosshairGui:Destroy()
+      CrosshairGui = nil
+      CrosshairDot = nil
+   end
+end
+
+task.spawn(function()
+   local hue = 0
+   while task.wait(0.03) do
+      if CrosshairEnabled and CrosshairColorMode == "Rainbow" and CrosshairDot then
+         hue = (hue + 0.01) % 1
+         CrosshairDot.BackgroundColor3 = Color3.fromHSV(hue, 1, 1)
+      end
+   end
+end)
+
+local function ApplyESP(player)
+   if player == LocalPlayer then return end
+   local function AddHighlight(character)
+      if not character then return end
+      local highlight = character:FindFirstChild("ESPHighlight") or Instance.new("Highlight")
+      highlight.Name = "ESPHighlight"
+      highlight.Adornee = character
+      highlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+      
+      if EspColorMode == "Team Color" and player.Team then
+         highlight.FillColor = player.TeamColor.Color
+      else
+         highlight.FillColor = Color3.fromRGB(255, 0, 255)
+      end
+      
+      highlight.Parent = character
+      Highlights[player] = highlight
+   end
+
+   if player.Character then
+      AddHighlight(player.Character)
+   end
+   player.CharacterAdded:Connect(AddHighlight)
+end
+
+local function ClearESP()
+   for _, player in pairs(game.Players:GetPlayers()) do
+      if player.Character and player.Character:FindFirstChild("ESPHighlight") then
+         player.Character.ESPHighlight:Destroy()
+      end
+   end
+   Highlights = {}
+end
+
+task.spawn(function()
+   while task.wait(0.5) do
+      if EspEnabled then
+         for _, player in pairs(game.Players:GetPlayers()) do
+            if CheckTeam(player) then
+               ApplyESP(player)
+            else
+               if player.Character and player.Character:FindFirstChild("ESPHighlight") then
+                  player.Character.ESPHighlight:Destroy()
+               end
+            end
+         end
+      end
+   end
+end)
+
+CombatTab:CreateToggle({
+   Name = "Hitbox Expander",
+   CurrentValue = false,
+   Callback = function(Value)
+      HitboxEnabled = Value
+   end,
+})
+
+CombatTab:CreateSlider({
+   Name = "Hitbox Size",
+   Range = {0, 50},
+   Increment = 1,
+   Suffix = "Studs",
+   CurrentValue = 2,
+   Callback = function(Value)
+      HitboxSize = Value
+   end,
+})
+
+CombatTab:CreateToggle({
+   Name = "Crosshair",
+   CurrentValue = false,
+   Callback = function(Value)
+      CrosshairEnabled = Value
+      if Value then
+         CreateCrosshair()
+      else
+         RemoveCrosshair()
+      end
+   end,
+})
+
+CombatTab:CreateToggle({
+   Name = "ESP Highlight",
+   CurrentValue = false,
+   Callback = function(Value)
+      EspEnabled = Value
+      if not Value then
+         ClearESP()
+      end
+   end,
+})
+
+SettingsTab:CreateDropdown({
+   Name = "Target Team",
+   Options = {"All", "Other teams"},
+   CurrentOption = {"All"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      TargetTeam = Option[1]
+   end,
+})
+
+SettingsTab:CreateDropdown({
+   Name = "ESP Color Mode",
+   Options = {"Team Color", "Default"},
+   CurrentOption = {"Team Color"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      EspColorMode = Option[1]
+      if EspEnabled then
+         ClearESP()
+      end
+   end,
+})
+
+SettingsTab:CreateDropdown({
+   Name = "Crosshair Color",
+   Options = {"Oq", "Qizil", "Qora", "Sariq", "Rainbow"},
+   CurrentOption = {"Oq"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      CrosshairColorMode = Option[1]
+      UpdateCrosshairColor()
+   end,
+})
+
+SettingsTab:CreateDropdown({
+   Name = "Hitbox Target Part",
+   Options = {"Tana (HumanoidRootPart)", "Head"},
+   CurrentOption = {"Tana (HumanoidRootPart)"},
+   MultipleOptions = false,
+   Callback = function(Option)
+      if Option[1] == "Head" then
+         TargetPart = "Head"
+      else
+         TargetPart = "HumanoidRootPart"
+      end
+   end,
+})
+
+InfoTab:CreateLabel("Idea By: Moress")
+InfoTab:CreateLabel("Created by: Venxggs")
