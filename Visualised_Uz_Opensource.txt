@@ -25,6 +25,8 @@ local CrosshairEnabled = false
 local CrosshairColorMode = "White"
 local CrosshairGui = nil
 local CrosshairDot = nil
+local CrosshairOffsetX = 0
+local CrosshairOffsetY = 0
 
 local EspEnabled = false
 local EspColorMode = "Team Color"
@@ -78,6 +80,12 @@ local function UpdateCrosshairColor()
    end
 end
 
+local function UpdateCrosshairPosition()
+   if CrosshairDot then
+      CrosshairDot.Position = UDim2.new(0.5, -3 + CrosshairOffsetX, 0.5, -3 + CrosshairOffsetY)
+   end
+end
+
 local function CreateCrosshair()
    if CrosshairGui then CrosshairGui:Destroy() end
    CrosshairGui = Instance.new("ScreenGui")
@@ -86,7 +94,6 @@ local function CreateCrosshair()
 
    CrosshairDot = Instance.new("Frame")
    CrosshairDot.Size = UDim2.new(0, 6, 0, 6)
-   CrosshairDot.Position = UDim2.new(0.5, -3, 0.5, -3)
    CrosshairDot.AnchorPoint = Vector2.new(0.5, 0.5)
    CrosshairDot.BorderSizePixel = 0
    CrosshairDot.Parent = CrosshairGui
@@ -95,6 +102,7 @@ local function CreateCrosshair()
    corner.CornerRadius = UDim.new(1, 0)
    corner.Parent = CrosshairDot
 
+   UpdateCrosshairPosition()
    UpdateCrosshairColor()
 end
 
@@ -254,6 +262,38 @@ SettingsTab:CreateDropdown({
       else
          TargetPart = "HumanoidRootPart"
       end
+   end,
+})
+
+SettingsTab:CreateButton({
+   Name = "Crosshair Up",
+   Callback = function()
+      CrosshairOffsetY = CrosshairOffsetY - 1
+      UpdateCrosshairPosition()
+   end,
+})
+
+SettingsTab:CreateButton({
+   Name = "Crosshair Down",
+   Callback = function()
+      CrosshairOffsetY = CrosshairOffsetY + 1
+      UpdateCrosshairPosition()
+   end,
+})
+
+SettingsTab:CreateButton({
+   Name = "Crosshair Left",
+   Callback = function()
+      CrosshairOffsetX = CrosshairOffsetX - 1
+      UpdateCrosshairPosition()
+   end,
+})
+
+SettingsTab:CreateButton({
+   Name = "Crosshair Right",
+   Callback = function()
+      CrosshairOffsetX = CrosshairOffsetX + 1
+      UpdateCrosshairPosition()
    end,
 })
 
