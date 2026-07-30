@@ -53,6 +53,16 @@ task.spawn(function()
                   target.Size = Vector3.new(HitboxSize, HitboxSize, HitboxSize)
                   target.Transparency = 0.5
                   target.CanCollide = false
+                  target.Massless = true
+                  target.CanTouch = false
+                  
+                  if TargetPart == "Head" then
+                     for _, p in pairs(char:GetChildren()) do
+                        if p:IsA("BasePart") and p.Name ~= "Head" then
+                           p.CanCollide = false
+                        end
+                     end
+                  end
                else
                   if TargetPart == "Head" then
                      target.Size = Vector3.new(1.2, 1.2, 1.2)
@@ -60,6 +70,9 @@ task.spawn(function()
                      target.Size = Vector3.new(2, 2, 1)
                   end
                   target.Transparency = 0
+                  target.CanCollide = (TargetPart == "Head")
+                  target.Massless = false
+                  target.CanTouch = true
                end
             end
          end
@@ -299,3 +312,4 @@ SettingsTab:CreateButton({
 
 InfoTab:CreateLabel("Idea By: Moress")
 InfoTab:CreateLabel("Created by: Venxggs")
+InfoTab:CreateLabel("Created by: OpenSource")
